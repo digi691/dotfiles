@@ -1,0 +1,15 @@
+# AlmaLinux/RHEL/Fedora reference list. install.sh uses these names
+# automatically via lib/pkg.sh when falling back to dnf; kept here too for
+# manual installs:
+#   grep -v '^#' packages/dnf.txt | xargs sudo dnf install -y
+
+zsh
+tmux
+vim-enhanced
+git
+curl
+unzip
+fontconfig
+
+# starship: enable EPEL first on AlmaLinux/RHEL, or use the local installer:
+#   curl -sS https://starship.rs/install.sh | sh -s -- --bin-dir ~/.local/bin -y

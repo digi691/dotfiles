@@ -1,0 +1,58 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+format = """
+[┌](bold green) $os$username$hostname$directory$git_branch$git_status$git_state
+[└](bold green) $character"""
+
+[os]
+disabled = false
+style = "bold blue"
+
+[username]
+show_always = false
+style_user = "bold yellow"
+format = "[$user]($style)@"
+
+# Only show user@host when SSH'd into a dev box — stay quiet on the local
+# machine so the prompt doubles as a "which box am I on" cue.
+[hostname]
+ssh_only = true
+style = "bold green"
+format = "[$hostname]($style) "
+
+[directory]
+truncation_length = 4
+truncate_to_repo = true
+style = "bold cyan"
+
+[git_branch]
+symbol = " "
+style = "bold purple"
+format = "on [$symbol$branch]($style) "
+
+[git_status]
+style = "bold red"
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+staged = "[+${count}](green)"
+modified = "!${count}"
+untracked = "?${count}"
+stashed = "*${count}"
+conflicted = "=${count}"
+
+[git_state]
+format = '\([$state( $progress_current/$progress_total)]($style)\) '
+style = "bold red"
+
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+vimcmd_symbol = "[❮](bold green)"
+
+[cmd_duration]
+min_time = 2000
+format = "took [$duration](yellow) "
+
+[battery]
+disabled = true

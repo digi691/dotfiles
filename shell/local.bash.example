@@ -1,0 +1,5 @@
+# Copy this to shell/local.bash (gitignored) for per-machine bash-fallback
+# tweaks. Sourced last by shell/bootstrap.bash, only reached when zsh isn't
+# available on this machine.
+#
+# export SOME_WORK_ONLY_VAR=1

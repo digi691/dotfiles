@@ -1,0 +1,11 @@
+# Arch Linux reference list. install.sh uses these names automatically via
+# lib/pkg.sh when falling back to pacman; kept here too for manual installs:
+#   grep -v '^#' packages/pacman.txt | xargs sudo pacman -Sy --noconfirm
+
+zsh
+tmux
+vim
+git
+curl
+unzip
+starship

@@ -1,0 +1,9 @@
+# Formulas only (no casks — fonts are handled by fonts/install-fonts.sh so
+# the same mechanism works on Linuxbrew, which doesn't support casks).
+# Usage: brew bundle --file=packages/Brewfile
+brew "zsh"
+brew "tmux"
+brew "vim"
+brew "git"
+brew "curl"
+brew "starship"

@@ -1,0 +1,15 @@
+# Ubuntu/Debian reference list. install.sh uses these names automatically
+# via lib/pkg.sh when falling back to apt; kept here too for boxes where you
+# can't run scripts at all and have to install by hand:
+#   grep -v '^#' packages/apt.txt | xargs sudo apt-get install -y
+zsh
+tmux
+vim
+git
+curl
+unzip
+fontconfig
+
+# starship may not exist in older Ubuntu/Debian repos; if apt-get install
+# starship fails, use the local installer instead:
+#   curl -sS https://starship.rs/install.sh | sh -s -- --bin-dir ~/.local/bin -y

@@ -1,0 +1,4 @@
+.DS_Store
+*.dotfiles.tmp
+shell/local.zsh
+shell/local.bash

@@ -1,0 +1,5 @@
+# Copy this to shell/local.zsh (gitignored) for per-machine zsh tweaks —
+# work-only env vars, a machine-specific PATH entry, etc. Sourced last by
+# shell/bootstrap.zsh, so it can override anything above it.
+#
+# export SOME_WORK_ONLY_VAR=1
