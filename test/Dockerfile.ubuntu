@@ -1,0 +1,20 @@
+FROM ubuntu:24.04
+ENV DEBIAN_FRONTEND=noninteractive
+
+# A real dev box would have sudo, a C toolchain (Homebrew needs one), and
+# the handful of utilities Homebrew's installer checks for (procps for `ps`).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        sudo curl git ca-certificates build-essential procps file unzip locales \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+
+# Homebrew's installer refuses to run as root, so mirror a normal
+# non-root-with-sudo dev-box account.
+RUN useradd -m -s /bin/bash tester \
+    && echo "tester ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/tester
+
+USER tester
+WORKDIR /home/tester
+COPY --chown=tester:tester . /home/tester/.dotfiles

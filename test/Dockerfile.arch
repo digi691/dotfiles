@@ -1,0 +1,23 @@
+FROM archlinux:latest
+
+# pacman's download sandboxing (its "alpm" sandbox user + a seccomp filter)
+# fails under qemu's user-mode emulation (needed here since Arch only
+# publishes x86_64 images, and this may be built on an arm64 host) with
+# "error restricting syscalls via seccomp: 22!" — the seccomp() syscall
+# itself isn't properly emulated across architectures. DisableSandbox is
+# pacman's own documented opt-out for exactly this kind of environment.
+#
+# -Syu (not just -Sy): the base image's installed packages are already
+# behind the freshly-synced repo metadata; syncing without also upgrading
+# is Arch's classic "partial upgrade" trap and breaks dependencies (seen
+# here as an openssl/libcrypto conflict) before anything is even installed.
+RUN sed -i '/^\[options\]/a DisableSandbox' /etc/pacman.conf \
+    && pacman -Syu --noconfirm sudo curl git base-devel procps-ng file unzip \
+    && pacman -Scc --noconfirm
+
+RUN useradd -m -s /bin/bash tester \
+    && echo "tester ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/tester
+
+USER tester
+WORKDIR /home/tester
+COPY --chown=tester:tester . /home/tester/.dotfiles

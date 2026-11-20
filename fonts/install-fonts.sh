@@ -17,7 +17,10 @@ case "$(uname -s)" in
 esac
 mkdir -p "$DEST"
 
-if find "$DEST" -iname "*${FONT_NAME}*Nerd Font*" 2>/dev/null | grep -q .; then
+# Nerd Fonts v3 file names vary by release ("Hack Regular Nerd Font
+# Complete.ttf" vs "HackNerdFont-Regular.ttf") — match loosely rather than
+# assuming a literal space between "Nerd" and "Font".
+if find "$DEST" -iname "*${FONT_NAME}*Nerd*Font*" 2>/dev/null | grep -q .; then
   echo "==> ${FONT_NAME} Nerd Font already installed in $DEST"
   exit 0
 fi

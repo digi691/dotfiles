@@ -1,0 +1,15 @@
+FROM almalinux:9
+
+# curl isn't listed: the base image already ships curl-minimal, which
+# provides /usr/bin/curl and is all install.sh needs (plain HTTPS GETs) —
+# requesting the full curl package conflicts with it (NEVRA swap dnf won't
+# do automatically).
+RUN dnf install -y sudo git ca-certificates gcc gcc-c++ make procps-ng file unzip \
+    && dnf clean all
+
+RUN useradd -m -s /bin/bash tester \
+    && echo "tester ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/tester
+
+USER tester
+WORKDIR /home/tester
+COPY --chown=tester:tester . /home/tester/.dotfiles
