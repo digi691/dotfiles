@@ -23,11 +23,28 @@ for pkg in zsh tmux vim git curl; do
   dotfiles_install "$pkg"
 done
 
+# Wire the rc files before oh-my-zsh runs: its installer only leaves an
+# existing ~/.zshrc alone (KEEP_ZSHRC=yes) if one already exists — otherwise
+# it drops in its own full template, defeating the "rc files stay empty"
+# design. Pre-seeding it with just our guarded block first means that's the
+# "existing config" omz finds and preserves.
+echo "==> Wiring shell entrypoints (.bashrc, .bash_profile, .zprofile, .zshrc)"
+"$DOTFILES_DIR/lib/inject-rc.sh"
+
 echo "==> Installing Starship prompt"
 "$DOTFILES_DIR/lib/install-starship.sh"
 
 echo "==> Installing oh-my-zsh + plugins"
 "$DOTFILES_DIR/lib/install-omz.sh"
+
+# Configs must be linked before vim-plug/TPM run below — both drive their
+# install through the real vimrc/tmux.conf (that's what defines the plugin
+# list), not a bare editor/multiplexer.
+echo "==> Linking configs"
+mkdir -p "$HOME/.config"
+ln -sf "$DOTFILES_DIR/config/starship.toml" "$HOME/.config/starship.toml"
+ln -sf "$DOTFILES_DIR/vim/vimrc" "$HOME/.vimrc"
+ln -sf "$DOTFILES_DIR/tmux/tmux.conf" "$HOME/.tmux.conf"
 
 echo "==> Installing vim-plug + vim plugins"
 "$DOTFILES_DIR/lib/install-vim-plug.sh"
@@ -37,14 +54,5 @@ echo "==> Installing tmux plugin manager (TPM) + plugins"
 
 echo "==> Installing fonts (default: Hack Nerd Font)"
 "$DOTFILES_DIR/fonts/install-fonts.sh" "${DOTFILES_FONT:-Hack}"
-
-echo "==> Linking configs"
-mkdir -p "$HOME/.config"
-ln -sf "$DOTFILES_DIR/config/starship.toml" "$HOME/.config/starship.toml"
-ln -sf "$DOTFILES_DIR/vim/vimrc" "$HOME/.vimrc"
-ln -sf "$DOTFILES_DIR/tmux/tmux.conf" "$HOME/.tmux.conf"
-
-echo "==> Wiring shell entrypoints (.bashrc, .bash_profile, .zprofile, .zshrc)"
-"$DOTFILES_DIR/lib/inject-rc.sh"
 
 echo "==> Done. Start a new terminal, or run: exec \$SHELL -l"

@@ -31,7 +31,7 @@ dotfiles_os() {
 
 dotfiles_ensure_brew() {
   dotfiles_has brew && return 0
-  [ -n "$DOTFILES_NO_BREW" ] && return 1
+  [ -n "${DOTFILES_NO_BREW:-}" ] && return 1
 
   echo "==> Installing Homebrew (user-writable prefix, no system packages touched)"
   NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -74,7 +74,7 @@ dotfiles_install() {
   pkg="$1"
   dotfiles_has "$pkg" && return 0
 
-  if [ -z "$DOTFILES_NO_BREW" ] && dotfiles_ensure_brew; then
+  if [ -z "${DOTFILES_NO_BREW:-}" ] && dotfiles_ensure_brew; then
     if brew install "$pkg"; then
       return 0
     fi
