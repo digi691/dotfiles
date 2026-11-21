@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Full integration test: builds a containerized dev box per distro, runs
-# install.sh as a non-root sudo user (mirroring a real machine), then runs
-# test/checks.sh inside it. See CLAUDE.md for when this must be run.
+# this repo's full install/update/uninstall lifecycle as a non-root sudo
+# user (mirroring a real machine), plus one check that install.sh
+# auto-symlinks ~/.dotfiles correctly when the repo lives elsewhere. See
+# CLAUDE.md for when this must be run.
 #
 # Usage:
 #   test/run.sh                 # all supported distros
@@ -108,5 +110,34 @@ for distro in "${distros[@]}"; do
   fi
   echo
 done
+
+# Every container above places the repo at exactly ~/.dotfiles via its
+# Dockerfile's COPY, so none of them actually exercise install.sh's
+# "repo lives somewhere else, auto-symlink ~/.dotfiles to it" path — the
+# exact scenario that bit a real run of this once already. Covered here
+# as one extra check, reusing the already-built ubuntu image rather than
+# adding a whole new distro dimension to every run.
+ubuntu_image="dotfiles-test-ubuntu"
+if "$ENGINE" image inspect "$ubuntu_image" >/dev/null 2>&1; then
+  echo "==> [relocated-source] verifying install.sh auto-symlinks ~/.dotfiles when the repo lives elsewhere"
+  relocated_result=0
+  "$ENGINE" run --rm "$ubuntu_image" bash -c '
+      set -e
+      mv /home/tester/.dotfiles /home/tester/dotfiles-src
+      bash -lc "cd /home/tester/dotfiles-src && ./install.sh" &&
+      [ -L /home/tester/.dotfiles ] &&
+      [ "$(readlink /home/tester/.dotfiles)" = "/home/tester/dotfiles-src" ] &&
+      echo "--- symlink points at relocated source OK ---" &&
+      bash -lc "cd /home/tester/.dotfiles && bash test/checks.sh"
+    ' && relocated_result=1 || relocated_result=0
+  if [ "$relocated_result" = "1" ]; then
+    echo "==> [relocated-source] PASS"
+  else
+    echo "==> [relocated-source] FAIL"
+    overall=1
+  fi
+else
+  echo "==> [relocated-source] SKIP: ubuntu image wasn't built this run" >&2
+fi
 
 exit $overall

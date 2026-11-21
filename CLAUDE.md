@@ -47,6 +47,16 @@ edge case.
 Both check scripts print PASS/FAIL per check inside the container and
 exit non-zero if anything failed.
 
+- **`[relocated-source]` check in `test/run.sh`** — none of the three
+  per-distro containers actually exercise install.sh running from
+  somewhere other than `~/.dotfiles` (their Dockerfiles `COPY` straight to
+  that path), so this reuses the already-built ubuntu image, moves the
+  repo to `~/dotfiles-src` first, then runs `install.sh` from there and
+  asserts `~/.dotfiles` ends up as a symlink pointing back at it. This is
+  regression coverage for a real bug: a run of install.sh from a path
+  other than `~/.dotfiles` left the rc files pointing at a `~/.dotfiles`
+  that didn't exist, so nothing loaded in any new shell.
+
 ## install.sh vs. update.sh — don't blur these
 
 `install.sh` is idempotent-safe to re-run (the harness proves this) but is
@@ -126,7 +136,16 @@ step), suspect one of these first rather than editing `install.sh`:
    A bare reference crashes the whole install the first time someone runs
    it without that variable set — this exact bug shipped once already.
 
-5. **Ordering matters more than it looks like it should.** oh-my-zsh's
+5. **Rc files always say `$HOME/.dotfiles`, regardless of where this repo
+   actually lives** — that's what keeps the wiring identical across
+   machines/usernames. `install.sh` enforces this at the top (symlinking
+   `~/.dotfiles` to the real location if it's run from elsewhere, erroring
+   out instead of guessing if `~/.dotfiles` already exists as something
+   unrelated). Don't make any other script assume `$DOTFILES_DIR` equals
+   the physical path this repo is checked out at — it may be a symlink,
+   and that's intentional, not a case to "fix."
+
+6. **Ordering matters more than it looks like it should.** oh-my-zsh's
    installer only preserves an *existing* `~/.zshrc` — if nothing wires the
    dotfiles block into it first, it overwrites it with the stock omz
    template. vim-plug and TPM both read their plugin list out of the real
@@ -135,7 +154,7 @@ step), suspect one of these first rather than editing `install.sh`:
    re-read the comments already there explaining these two dependencies,
    and re-run the full harness — don't assume independence between steps.
 
-6. Keep `test/checks.sh` and `test/lint.sh` themselves covered by
+7. Keep `test/checks.sh` and `test/lint.sh` themselves covered by
    `test/lint.sh`'s own sweep (they're plain `.sh` files, so this is
    automatic) — don't exclude the test harness from the thing it enforces
    on everything else.

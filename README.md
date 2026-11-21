@@ -50,6 +50,14 @@ cd ~/.dotfiles
 ./install.sh
 ```
 
+Rc files always reference `$HOME/.dotfiles`, so cloning there is the
+convention — but if you run `install.sh` from somewhere else (a different
+clone path, or just testing it out of a working copy), it symlinks
+`~/.dotfiles` to wherever it actually is rather than silently leaving the
+rc files pointing nowhere. If `~/.dotfiles` already exists as something
+else (a real directory, or a symlink elsewhere), it stops with an error
+instead of guessing what you meant.
+
 What it does: installs zsh/tmux/vim/git/curl (brew first, system package
 fallback), installs Starship via its own local installer, installs
 oh-my-zsh + `zsh-autosuggestions`/`zsh-syntax-highlighting`/`zsh-completions`

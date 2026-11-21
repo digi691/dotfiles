@@ -8,10 +8,34 @@ DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export DOTFILES_DIR
 source "$DOTFILES_DIR/lib/pkg.sh"
 
-if [ "$DOTFILES_DIR" != "$HOME/.dotfiles" ]; then
-  echo "==> Warning: this repo is at $DOTFILES_DIR, but the shell rc files will" >&2
-  echo "    be wired to look for it at \$HOME/.dotfiles (so the setup is portable" >&2
-  echo "    across machines/usernames). Clone to ~/.dotfiles, or symlink it there." >&2
+# Rc files always reference $HOME/.dotfiles (lib/inject-rc.sh), not
+# whatever path this script actually happens to run from — that keeps the
+# rc-file wiring identical across machines/usernames regardless of where
+# each one's clone lives. So if this repo isn't already there, make it so:
+# symlink $HOME/.dotfiles to wherever it actually is. Running install.sh
+# *through* an existing correct symlink resolves DOTFILES_DIR to
+# $HOME/.dotfiles already (plain `pwd` preserves the path you cd'ed via,
+# not the symlink's target), so this block is a no-op on every subsequent
+# run — it only ever acts the first time, or if the repo moves.
+CANONICAL_DOTFILES="$HOME/.dotfiles"
+if [ "$DOTFILES_DIR" != "$CANONICAL_DOTFILES" ]; then
+  if [ -L "$CANONICAL_DOTFILES" ]; then
+    existing_target="$(readlink "$CANONICAL_DOTFILES")"
+    if [ "$existing_target" != "$DOTFILES_DIR" ]; then
+      echo "==> ERROR: $CANONICAL_DOTFILES is a symlink to $existing_target, not $DOTFILES_DIR." >&2
+      echo "    Rc files are wired to \$HOME/.dotfiles for portability across machines/usernames." >&2
+      echo "    Fix or remove that symlink (it may point at a different, intentional clone), then re-run." >&2
+      exit 1
+    fi
+  elif [ -e "$CANONICAL_DOTFILES" ]; then
+    echo "==> ERROR: $CANONICAL_DOTFILES already exists and isn't a symlink." >&2
+    echo "    Rc files are wired to \$HOME/.dotfiles for portability across machines/usernames." >&2
+    echo "    Move it aside (it may be unrelated, pre-existing data), then re-run." >&2
+    exit 1
+  else
+    echo "==> This repo is at $DOTFILES_DIR, not \$HOME/.dotfiles — symlinking $CANONICAL_DOTFILES -> $DOTFILES_DIR"
+    ln -s "$DOTFILES_DIR" "$CANONICAL_DOTFILES"
+  fi
 fi
 
 echo "==> Detected OS: $(dotfiles_os)"
