@@ -60,7 +60,11 @@ run_flags_for() { flags_for "$1"; }
 # change until you opened a new one. The full sequence covers this repo's
 # whole lifecycle, not just a first install: fresh install -> verify ->
 # install again (must still succeed, not just "fail less loudly" —
-# idempotency) -> verify again -> uninstall -> verify it's actually clean.
+# idempotency) -> verify again -> update.sh -> verify nothing broke ->
+# uninstall -> verify it's actually clean. update.sh reuses checks.sh
+# rather than a dedicated checks-update.sh: a successful update shouldn't
+# change any of those invariants, so the same assertions double as the
+# "did update.sh break anything" check.
 overall=0
 for distro in "${distros[@]}"; do
   dockerfile="$TEST_DIR/Dockerfile.$distro"
@@ -83,7 +87,7 @@ for distro in "${distros[@]}"; do
     continue
   fi
 
-  echo "==> [$distro] running: install -> check -> reinstall -> check -> uninstall -> check"
+  echo "==> [$distro] running: install -> check -> reinstall -> check -> update -> check -> uninstall -> check"
   run_result=0
   "$ENGINE" run $run_flags --rm "$image" bash -c '
       set -e
@@ -91,6 +95,8 @@ for distro in "${distros[@]}"; do
       bash -lc "cd ~/.dotfiles && bash test/checks.sh"              && echo "--- post-install checks OK ---" &&
       bash -lc "cd ~/.dotfiles && ./install.sh"                     && echo "--- second install (idempotency) OK ---" &&
       bash -lc "cd ~/.dotfiles && bash test/checks.sh"              && echo "--- post-reinstall checks OK ---" &&
+      bash -lc "cd ~/.dotfiles && ./update.sh"                      && echo "--- update OK ---" &&
+      bash -lc "cd ~/.dotfiles && bash test/checks.sh"              && echo "--- post-update checks OK ---" &&
       bash -lc "cd ~/.dotfiles && ./uninstall.sh"                   && echo "--- uninstall OK ---" &&
       bash -lc "cd ~/.dotfiles && bash test/checks-uninstall.sh"    && echo "--- post-uninstall checks OK ---"
     ' && run_result=1 || run_result=0

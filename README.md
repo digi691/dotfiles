@@ -26,7 +26,7 @@ AlmaLinux) over SSH, with bash as a common starting point.
 ## Layout
 
 ```
-install.sh / uninstall.sh   entrypoints
+install.sh / update.sh / uninstall.sh   entrypoints
 lib/                         package abstraction + per-tool install helpers
 shell/
   bootstrap.bash             sourced by .bashrc / .bash_profile
@@ -82,6 +82,22 @@ package-name lists you can hand to the system package manager directly:
 ```sh
 grep -v '^#' packages/apt.txt | xargs sudo apt-get install -y
 ```
+
+## Update
+
+```sh
+~/.dotfiles/update.sh
+```
+
+`install.sh` is idempotent-safe to re-run, but deliberately not an
+upgrader — it skips anything already present (e.g. `command -v zsh` short-
+circuits before it would ever check for a newer version). `update.sh` is
+the actual upgrade path: `brew upgrade`, oh-my-zsh's own upgrade script (or
+`git pull`) plus a `git pull` for each zsh plugin, `vim +PlugUpdate`, and
+TPM's `update_plugins all`. It only touches what this repo manages
+directly — if a tool came from the system-package fallback
+(`DOTFILES_NO_BREW=1`), update it through your OS's normal process instead;
+this won't run a system-wide `apt`/`pacman`/`dnf` upgrade for you.
 
 ## Uninstall / start over
 

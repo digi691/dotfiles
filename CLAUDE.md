@@ -28,15 +28,17 @@ edge case.
   installer refuses to run as root), then runs this repo's full lifecycle
   inside it: `install.sh` → `test/checks.sh` → `install.sh` again
   (idempotency — a second run must still succeed, not just fail quietly)
-  → `test/checks.sh` again → `uninstall.sh` → `test/checks-uninstall.sh`.
-  Defaults to all three distros; pass names to run a subset, e.g.
-  `test/run.sh ubuntu`. Auto-detects `podman` or `docker`; override with
-  `CONTAINER_ENGINE`.
+  → `test/checks.sh` again → `update.sh` → `test/checks.sh` again (a
+  successful update shouldn't break any of install.sh's invariants, so
+  checks.sh doubles as the "did update.sh break anything" check too) →
+  `uninstall.sh` → `test/checks-uninstall.sh`. Defaults to all three
+  distros; pass names to run a subset, e.g. `test/run.sh ubuntu`.
+  Auto-detects `podman` or `docker`; override with `CONTAINER_ENGINE`.
 - **`test/checks.sh`** — post-install assertions (rc files stayed minimal,
   tools resolve on PATH, configs are symlinked not copied, every plugin
   manager's plugins actually landed, the bash→zsh handoff and its
-  `DOTFILES_NO_EXEC_ZSH` override both behave correctly). Also re-run
-  after the second `install.sh`, so it doubles as the idempotency check.
+  `DOTFILES_NO_EXEC_ZSH` override both behave correctly). Reused after
+  `install.sh`'s second run and after `update.sh`, not just the first run.
 - **`test/checks-uninstall.sh`** — post-uninstall assertions: the rc-file
   blocks are actually gone and the bash→zsh handoff is gone with them, but
   everything `uninstall.sh` deliberately leaves alone (oh-my-zsh, the
@@ -44,6 +46,20 @@ edge case.
 
 Both check scripts print PASS/FAIL per check inside the container and
 exit non-zero if anything failed.
+
+## install.sh vs. update.sh — don't blur these
+
+`install.sh` is idempotent-safe to re-run (the harness proves this) but is
+*not* an upgrader by design: every step checks "is this already present"
+and skips if so, so re-running it never moves an already-installed tool,
+plugin, or font forward to a newer version. `update.sh` is the deliberate
+upgrade path (`brew upgrade`, oh-my-zsh's upgrade script, a `git pull` per
+zsh plugin, `vim +PlugUpdate`, TPM's `update_plugins`) and only touches
+what this repo manages directly — it does not run a system-wide
+apt/pacman/dnf upgrade. If you add a new installable thing to `install.sh`,
+decide deliberately whether `update.sh` needs a matching step to keep it
+current, and don't fold update-forcing logic into `install.sh` itself —
+that would break the idempotency property the harness checks for.
 
 ## Known environment quirks (container-harness-only, not install.sh bugs)
 
@@ -54,12 +70,25 @@ step), suspect one of these first rather than editing `install.sh`:
 - **Arch on an arm64 host**: Arch Linux proper only publishes x86_64
   images (there's no arm64 track — that's the separate Arch Linux ARM
   project), so `test/run.sh` builds/runs the `arch` image under
-  `--platform linux/amd64` emulation. It also needs
-  `--security-opt seccomp=unconfined` on the build: pacman's own
-  sandboxing (an "alpm" sandbox user + seccomp) doesn't work layered
-  inside podman's confinement, especially under emulation — a known
-  pacman-in-containers issue. Both flags live in `build_flags_for`/
-  `run_flags_for` in `test/run.sh`.
+  `--platform linux/amd64` emulation (`platform_for` in `test/run.sh`).
+  Emulation alone isn't enough, though: pacman's own download sandboxing
+  (an "alpm" sandbox user + a seccomp filter) fails under qemu's user-mode
+  emulation with `error restricting syscalls via seccomp: 22!` — the
+  seccomp() syscall itself isn't properly emulated across architectures.
+  `test/Dockerfile.arch` works around this with pacman's own
+  `DisableSandbox` opt-out (not a podman `--security-opt`, which doesn't
+  reach pacman's internal sandboxing at all) and uses `-Syu` rather than
+  `-Sy` to avoid the classic Arch "partial upgrade" dependency trap against
+  the base image's already-stale installed packages.
+- **Homebrew under Arch's amd64 emulation**: `brew install`/`brew update`
+  can fail outright there with `Homebrew's x86_64 support on Linux
+  requires a CPU with SSSE3 support!` — portable-ruby needs SIMD
+  instructions qemu's user-mode emulation doesn't reliably provide. This
+  is exactly why `dotfiles_install` in `lib/pkg.sh` always falls back to
+  the system package manager on failure, and why `update.sh`'s brew step
+  is wrapped so a failure there doesn't abort the rest of the update. Real
+  x86_64 hardware has had SSSE3 since ~2004, so this is emulation-only —
+  don't mistake it for a real compatibility requirement to design around.
 - **AlmaLinux's `curl` package**: `test/Dockerfile.almalinux` deliberately
   does *not* list `curl` — the base image ships `curl-minimal`
   (providing `/usr/bin/curl`) and requesting the full `curl` package
