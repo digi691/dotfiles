@@ -127,11 +127,41 @@ Strips the guarded block back out of all four rc files. Installed tools
 left alone on purpose — it prints the manual commands to remove those too if
 you want a completely clean machine.
 
+## Secrets
+
+`install.sh` creates `shell/local.zsh` and `shell/local.bash` from their
+`.example` templates on first run (never overwriting one that already
+exists), locks them to mode `600`, and both are listed in `.gitignore`.
+They're sourced last by `shell/bootstrap.zsh`/`bootstrap.bash`, so this is
+where API keys, tokens, and any other per-machine-only exports go:
+
+```sh
+# shell/local.zsh
+export GITHUB_TOKEN="ghp_..."
+```
+
+This is a deliberate choice, not a placeholder for something fancier
+later: secrets live in plaintext on each machine and are never, under any
+circumstances, committed — not even encrypted. An encrypted blob checked
+into git is still a secret sitting in a remote's history forever, waiting
+on whatever key or algorithm protects it to someday fail; this setup
+can't be improved to that without an actual security tradeoff. The real
+cost is that there's no sync — a new machine means writing this file
+again by hand. If you want to eliminate *that* without touching git,
+point these files at a password-manager CLI instead of literal values
+(e.g. `export GITHUB_TOKEN="$(op read op://vault/item/token)"` for
+1Password) — nothing sensitive would touch disk at all, at the cost of
+needing that vault unlocked in every new shell.
+
+`uninstall.sh` never touches these files, but `rm -rf ~/.dotfiles` (its
+suggested full-cleanup step) deletes them along with everything else —
+they were never in git, so that's the only copy. Back them up first if
+you ever run that.
+
 ## Customizing
 
 - Prompt: edit `config/starship.toml` (schema: https://starship.rs/config-schema.json)
 - zsh plugins: edit the `plugins=(...)` array in `shell/zsh/omz.zsh`
 - vim plugins: add `Plug '...'` lines in `vim/vimrc`, then `vim +PlugInstall`
 - tmux plugins: add `set -g @plugin '...'` lines in `tmux/tmux.conf`, then `prefix + I`
-- Per-machine secrets/tweaks: copy `shell/local.zsh.example` → `shell/local.zsh`
-  (or the `.bash` equivalent) — gitignored, sourced last.
+- Per-machine secrets/tweaks: see [Secrets](#secrets) above.

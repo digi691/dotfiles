@@ -116,6 +116,26 @@ added, since guessing wrong means the wrong auth flow entirely. If a
 future ask just says "kubelogin," don't assume; it's happened once
 already that this needed clarifying.
 
+## Secrets never go in git, encrypted or not — this was a deliberate call
+
+`shell/local.zsh`/`local.bash` (gitignored, mode 600, created by
+`install.sh` from their `.example` templates) are the only place secrets
+go. An `age`/`sops`-encrypted secrets file committed to the repo was
+considered and explicitly rejected: that still puts a secret-bearing blob
+in a remote's history forever, waiting on whatever key or algorithm
+protects it to someday fail — a real "harvest now, decrypt later" risk,
+not a hypothetical one, especially once/if this repo ever gets a remote.
+Don't propose that approach again without the user raising it first. If
+the "no sync across machines" tradeoff ever becomes a real pain point,
+the documented escalation path is a password-manager CLI lookup inside
+`shell/local.zsh` (secret value never touches disk at all), not
+committing anything secret-derived to git.
+
+`test/checks.sh` asserts `shell/local.zsh`/`local.bash` are git-ignored
+(`git check-ignore`) as a live regression test, not just a comment — if
+`.gitignore` ever stops covering them, that check fails loudly before a
+real secret could ever land in a commit.
+
 ## Rules for changes in this repo
 
 1. **Any change to `install.sh`, `uninstall.sh`, `lib/`, `shell/`,

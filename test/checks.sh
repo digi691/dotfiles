@@ -30,6 +30,14 @@ same_target() {
   [ "$(readlink -f "$1")" = "$(readlink -f "$2")" ]
 }
 
+mode_600() {
+  [ "$(stat -c %a "$1")" = "600" ]
+}
+
+git_ignored() {
+  (cd "$DOTFILES_DIR" && git check-ignore -q "$1")
+}
+
 check_handoff() {
   mode="$1" # default | noexec
   if [ "$mode" = "noexec" ]; then
@@ -80,6 +88,14 @@ check "tmux-resurrect installed" [ -d "$HOME/.tmux/plugins/tmux-resurrect" ]
 # ---- fonts ----
 check "a Nerd Font got installed" bash -c \
   'find "$HOME/.local/share/fonts" "$HOME/Library/Fonts" -iname "*Nerd*Font*" 2>/dev/null | grep -q .'
+
+# ---- per-machine secrets file: never touches git, locked to 600 ----
+check "shell/local.zsh exists (created from template)"  [ -f "$DOTFILES_DIR/shell/local.zsh" ]
+check "shell/local.bash exists (created from template)" [ -f "$DOTFILES_DIR/shell/local.bash" ]
+check "shell/local.zsh is mode 600"     mode_600 "$DOTFILES_DIR/shell/local.zsh"
+check "shell/local.bash is mode 600"    mode_600 "$DOTFILES_DIR/shell/local.bash"
+check "shell/local.zsh is git-ignored"  git_ignored shell/local.zsh
+check "shell/local.bash is git-ignored" git_ignored shell/local.bash
 
 # ---- Kubernetes tools ----
 check "kubectl resolves on PATH"   command -v kubectl

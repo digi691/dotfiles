@@ -55,6 +55,20 @@ done
 echo "==> Wiring shell entrypoints (.bashrc, .bash_profile, .zprofile, .zshrc)"
 "$DOTFILES_DIR/lib/inject-rc.sh"
 
+# shell/local.{zsh,bash} are where secrets/per-machine-only exports go -
+# gitignored, sourced last, never touch git or any remote. Create them
+# from the .example templates if they don't exist yet (never overwrite
+# one that does), and lock permissions down every run regardless, in case
+# one ever ended up world-readable.
+echo "==> Setting up per-machine secrets file (shell/local.zsh, shell/local.bash)"
+for shell_kind in zsh bash; do
+  local_file="$DOTFILES_DIR/shell/local.$shell_kind"
+  if [ ! -f "$local_file" ]; then
+    cp "$DOTFILES_DIR/shell/local.$shell_kind.example" "$local_file"
+  fi
+  chmod 600 "$local_file"
+done
+
 echo "==> Installing Starship prompt"
 "$DOTFILES_DIR/lib/install-starship.sh"
 

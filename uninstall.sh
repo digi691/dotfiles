@@ -35,4 +35,9 @@ Rc files are clean again. Still in place, if you want to remove them by hand:
   rm -f ~/.vimrc ~/.tmux.conf ~/.config/starship.toml
   rm -rf ~/.oh-my-zsh ~/.vim/plugged ~/.tmux/plugins
   rm -rf $DOTFILES_DIR
+
+NOTE: that last one deletes $DOTFILES_DIR/shell/local.zsh and
+local.bash too - whatever secrets/per-machine exports you've put there
+go with it. Back those up first if you want them (they were never in
+git, so this is the only copy).
 EOF

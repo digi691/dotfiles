@@ -7,6 +7,7 @@
 set -u
 
 HOME_="$HOME"
+DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 pass=0
 fail=0
 
@@ -43,6 +44,8 @@ check "bash no longer hands off to zsh (disconnected)" check_handoff_absent
 check "oh-my-zsh is untouched by uninstall"    [ -d "$HOME_/.oh-my-zsh" ]
 check "~/.vimrc symlink is untouched"          [ -L "$HOME_/.vimrc" ]
 check "~/.tmux.conf symlink is untouched"      [ -L "$HOME_/.tmux.conf" ]
+check "shell/local.zsh is untouched (secrets survive uninstall)"  [ -f "$DOTFILES_DIR/shell/local.zsh" ]
+check "shell/local.bash is untouched (secrets survive uninstall)" [ -f "$DOTFILES_DIR/shell/local.bash" ]
 
 echo
 echo "===== $pass passed, $fail failed ====="
