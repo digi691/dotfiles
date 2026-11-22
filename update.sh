@@ -61,4 +61,22 @@ if [ -x "$HOME/.tmux/plugins/tpm/bin/update_plugins" ]; then
   "$HOME/.tmux/plugins/tpm/bin/update_plugins" all || true
 fi
 
+# Only re-download kubectl/k9s/kubelogin if that's how they're actually
+# managed here (~/.local/bin) — if they came from brew or the system
+# package manager instead, the steps above/your OS already cover updating
+# them.
+source "$DOTFILES_DIR/lib/install-k8s-tools.sh"
+if [ -f "$HOME/.local/bin/kubectl" ]; then
+  echo "==> Updating kubectl (official binary)"
+  download_kubectl || echo "    kubectl update failed, continuing"
+fi
+if [ -f "$HOME/.local/bin/k9s" ]; then
+  echo "==> Updating k9s (upstream GitHub release)"
+  download_k9s || echo "    k9s update failed, continuing"
+fi
+if [ -f "$HOME/.local/bin/kubelogin" ]; then
+  echo "==> Updating kubelogin (upstream GitHub release)"
+  download_kubelogin || echo "    kubelogin update failed, continuing"
+fi
+
 echo "==> Done. Start a new terminal, or run: exec \$SHELL -l"

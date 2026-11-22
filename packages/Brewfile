@@ -7,3 +7,11 @@ brew "vim"
 brew "git"
 brew "curl"
 brew "starship"
+brew "unzip"
+brew "kubectl"
+brew "k9s"
+
+# int128/kubelogin, a generic OIDC credential plugin for kubectl - not
+# the unrelated, Azure-specific Azure/kubelogin.
+tap "int128/kubelogin"
+brew "int128/kubelogin/kubelogin"

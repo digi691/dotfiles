@@ -42,8 +42,8 @@ echo "==> Detected OS: $(dotfiles_os)"
 
 mkdir -p "$HOME/.local/bin" "$HOME/.local/share/fonts" "$HOME/.config"
 
-echo "==> Installing core tools (zsh, tmux, vim, git, curl)"
-for pkg in zsh tmux vim git curl; do
+echo "==> Installing core tools (zsh, tmux, vim, git, curl, unzip)"
+for pkg in zsh tmux vim git curl unzip; do
   dotfiles_install "$pkg"
 done
 
@@ -78,5 +78,8 @@ echo "==> Installing tmux plugin manager (TPM) + plugins"
 
 echo "==> Installing fonts (default: Hack Nerd Font)"
 "$DOTFILES_DIR/fonts/install-fonts.sh" "${DOTFILES_FONT:-Hack}"
+
+echo "==> Installing Kubernetes tools (kubectl, k9s, kubelogin)"
+"$DOTFILES_DIR/lib/install-k8s-tools.sh"
 
 echo "==> Done. Start a new terminal, or run: exec \$SHELL -l"

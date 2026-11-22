@@ -9,3 +9,5 @@ git
 curl
 unzip
 starship
+kubectl
+k9s

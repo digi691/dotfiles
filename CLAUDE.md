@@ -106,6 +106,16 @@ step), suspect one of these first rather than editing `install.sh`:
   `install.sh` needs (plain HTTPS GETs); don't "fix" this by adding
   `curl` back or passing `--allowerasing`.
 
+## "kubelogin" is ambiguous — this repo installs a specific one
+
+Two unrelated projects both ship a binary called `kubelogin`:
+`Azure/kubelogin` (Azure AD/Entra ID auth for AKS) and
+`int128/kubelogin` (generic OIDC auth for any provider). This repo
+installs **int128/kubelogin** — confirmed with the user when this was
+added, since guessing wrong means the wrong auth flow entirely. If a
+future ask just says "kubelogin," don't assume; it's happened once
+already that this needed clarifying.
+
 ## Rules for changes in this repo
 
 1. **Any change to `install.sh`, `uninstall.sh`, `lib/`, `shell/`,
@@ -122,6 +132,20 @@ step), suspect one of these first rather than editing `install.sh`:
    (`check "description" command...`). If `uninstall.sh` should also
    affect it (or deliberately shouldn't), add the matching assertion to
    `test/checks-uninstall.sh` too.
+
+   If the tool has its own official/upstream binary release (like
+   kubectl, k9s, kubelogin in `lib/install-k8s-tools.sh`), give it a
+   `download_<tool>` function there that unconditionally (re)downloads —
+   returning non-zero rather than aborting, since it's sourced under
+   `set -e` too — and an `install_<tool>` wrapper that checks
+   `dotfiles_has` first, tries `download_<tool>` unless
+   `DOTFILES_NO_LOCAL_INSTALLERS` is set, then falls back to
+   `dotfiles_install` (or a tap-aware `brew install` if the formula isn't
+   in homebrew-core). `update.sh` sources the file and calls `download_*`
+   directly for whichever tools are actually present in `~/.local/bin`
+   (not brew- or system-package-installed) — gate the file's own
+   top-level `install_*` calls behind the `BASH_SOURCE[0]` = `$0` idiom so
+   sourcing it for just the functions doesn't also trigger a fresh install.
 
 3. **Adding support for a new distro** means adding
    `test/Dockerfile.<name>` (same shape as the existing three: a

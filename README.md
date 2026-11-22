@@ -62,8 +62,17 @@ What it does: installs zsh/tmux/vim/git/curl (brew first, system package
 fallback), installs Starship via its own local installer, installs
 oh-my-zsh + `zsh-autosuggestions`/`zsh-syntax-highlighting`/`zsh-completions`
 (without letting omz touch `.zshrc`), installs vim-plug and tmux's TPM,
-downloads a Nerd Font into a user-local font dir, symlinks `starship.toml`/
-`vimrc`/`tmux.conf`, then adds the one guarded block to each rc file.
+downloads a Nerd Font into a user-local font dir, installs kubectl, k9s,
+and kubelogin via their own official/upstream binary releases, symlinks
+`starship.toml`/`vimrc`/`tmux.conf`, then adds the one guarded block to
+each rc file.
+
+`kubelogin` here means [int128/kubelogin](https://github.com/int128/kubelogin),
+a generic OIDC credential plugin for kubectl — not the unrelated,
+Azure-specific `Azure/kubelogin` that happens to share the name. It's
+installed as a plain `kubelogin` binary on `PATH`, referenced directly as
+the `command` in a kubeconfig's `exec` auth provider — not registered as
+a `kubectl`-plugin-style `kubectl oidc-login` subcommand.
 
 Open a new terminal (or `exec $SHELL -l`) afterwards.
 

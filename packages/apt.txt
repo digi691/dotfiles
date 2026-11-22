@@ -13,3 +13,11 @@ fontconfig
 # starship may not exist in older Ubuntu/Debian repos; if apt-get install
 # starship fails, use the local installer instead:
 #   curl -sS https://starship.rs/install.sh | sh -s -- --bin-dir ~/.local/bin -y
+
+# kubectl, k9s, and kubelogin aren't reliably in Ubuntu/Debian's own repos
+# (kubectl needs Kubernetes' own apt repo added; the other two aren't
+# packaged here at all) - not listed above on purpose. Use their official
+# installers instead:
+#   curl -fsSL -o ~/.local/bin/kubectl "https://dl.k8s.io/release/$(curl -fsSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && chmod +x ~/.local/bin/kubectl
+#   curl -fsSL https://github.com/derailed/k9s/releases/latest/download/k9s_Linux_amd64.tar.gz | tar -xz -C ~/.local/bin k9s
+#   curl -fsSL https://github.com/int128/kubelogin/releases/latest/download/kubelogin_linux_amd64.zip -o /tmp/kubelogin.zip && unzip -oj /tmp/kubelogin.zip kubelogin -d ~/.local/bin

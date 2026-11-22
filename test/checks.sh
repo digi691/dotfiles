@@ -81,6 +81,11 @@ check "tmux-resurrect installed" [ -d "$HOME/.tmux/plugins/tmux-resurrect" ]
 check "a Nerd Font got installed" bash -c \
   'find "$HOME/.local/share/fonts" "$HOME/Library/Fonts" -iname "*Nerd*Font*" 2>/dev/null | grep -q .'
 
+# ---- Kubernetes tools ----
+check "kubectl resolves on PATH"   command -v kubectl
+check "k9s resolves on PATH"       command -v k9s
+check "kubelogin resolves on PATH" command -v kubelogin
+
 # ---- the shell-handoff behavior this whole repo is built around ----
 check "zsh loads cleanly via its bootstrap"           bash -c 'zsh -i -c "exit 0"'
 check "bash hands off to zsh interactively"           check_handoff default
