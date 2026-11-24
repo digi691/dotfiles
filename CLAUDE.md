@@ -34,6 +34,18 @@ edge case.
   `uninstall.sh` → `test/checks-uninstall.sh`. Defaults to all three
   distros; pass names to run a subset, e.g. `test/run.sh ubuntu`.
   Auto-detects `podman` or `docker`; override with `CONTAINER_ENGINE`.
+  Distros run **in parallel**, one background job each, so a full run
+  takes as long as the slowest distro rather than all of them added
+  together. Live output is interleaved but every line is prefixed
+  `[distro]`. Each job's full log lands in a temp dir (printed at the
+  start and in the end-of-run summary, which lists PASS/FAIL/SKIP per
+  job). Read the per-distro log to debug a failure; don't try to untangle
+  the interleaved stream. Ctrl-C stops every job and removes this run's
+  containers (they're tagged with a per-run `--label`, because killing
+  the engine client alone leaves a `--rm` container running). Keep the
+  jobs independent: anything that has to run after something else (like
+  `[relocated-source]` needing the ubuntu image) goes inside that job,
+  not as a new step between jobs.
 - **`test/checks.sh`** — post-install assertions (rc files stayed minimal,
   tools resolve on PATH, configs are symlinked not copied, every plugin
   manager's plugins actually landed, the bash→zsh handoff and its
@@ -50,7 +62,8 @@ exit non-zero if anything failed.
 - **`[relocated-source]` check in `test/run.sh`** — none of the three
   per-distro containers actually exercise install.sh running from
   somewhere other than `~/.dotfiles` (their Dockerfiles `COPY` straight to
-  that path), so this reuses the already-built ubuntu image, moves the
+  that path), so this reuses the ubuntu image (it starts as soon as the
+  ubuntu job's build finishes, alongside ubuntu's own lifecycle), moves the
   repo to `~/dotfiles-src` first, then runs `install.sh` from there and
   asserts `~/.dotfiles` ends up as a symlink pointing back at it. This is
   regression coverage for a real bug: a run of install.sh from a path
