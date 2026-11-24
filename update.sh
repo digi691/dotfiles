@@ -79,4 +79,9 @@ if [ -f "$HOME/.local/bin/kubelogin" ]; then
   download_kubelogin || echo "    kubelogin update failed, continuing"
 fi
 
+# Not an upgrade (Obsidian updates itself) — just picks up an Obsidian
+# install that happened after install.sh last ran.
+echo "==> Linking Obsidian CLI (only if Obsidian is installed)"
+"$DOTFILES_DIR/lib/install-obsidian-cli.sh" || echo "    Obsidian CLI link failed, continuing"
+
 echo "==> Done. Start a new terminal, or run: exec \$SHELL -l"

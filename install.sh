@@ -96,4 +96,7 @@ echo "==> Installing fonts (default: Hack Nerd Font)"
 echo "==> Installing Kubernetes tools (kubectl, k9s, kubelogin)"
 "$DOTFILES_DIR/lib/install-k8s-tools.sh"
 
+echo "==> Linking Obsidian CLI (only if Obsidian is installed)"
+"$DOTFILES_DIR/lib/install-obsidian-cli.sh"
+
 echo "==> Done. Start a new terminal, or run: exec \$SHELL -l"

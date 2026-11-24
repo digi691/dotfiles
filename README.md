@@ -63,7 +63,10 @@ fallback), installs Starship via its own local installer, installs
 oh-my-zsh + `zsh-autosuggestions`/`zsh-syntax-highlighting`/`zsh-completions`
 (without letting omz touch `.zshrc`), installs vim-plug and tmux's TPM,
 downloads a Nerd Font into a user-local font dir, installs kubectl, k9s,
-and kubelogin via their own official/upstream binary releases, symlinks
+and kubelogin via their own official/upstream binary releases, links
+Obsidian's bundled CLI into `~/.local/bin/obsidian` if the Obsidian app is
+installed (macOS; on Linux Obsidian's own CLI registration already puts it
+there), symlinks
 `starship.toml`/`vimrc`/`tmux.conf`, then adds the one guarded block to
 each rc file.
 

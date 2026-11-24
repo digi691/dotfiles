@@ -102,6 +102,34 @@ check "kubectl resolves on PATH"   command -v kubectl
 check "k9s resolves on PATH"       command -v k9s
 check "kubelogin resolves on PATH" command -v kubelogin
 
+# ---- Obsidian CLI ----
+# No container has Obsidian, so drive lib/install-obsidian-cli.sh against a
+# fake app bundle in a throwaway $HOME — exercises the real linking logic.
+obsidian_cli_links() {
+  tmp="$(mktemp -d)"
+  mkdir -p "$tmp/Obsidian.app/Contents/MacOS"
+  printf '#!/bin/sh\necho fake-obsidian-cli\n' > "$tmp/Obsidian.app/Contents/MacOS/obsidian-cli"
+  chmod +x "$tmp/Obsidian.app/Contents/MacOS/obsidian-cli"
+  HOME="$tmp/home" OBSIDIAN_APP="$tmp/Obsidian.app" "$DOTFILES_DIR/lib/install-obsidian-cli.sh" &&
+    HOME="$tmp/home" OBSIDIAN_APP="$tmp/Obsidian.app" "$DOTFILES_DIR/lib/install-obsidian-cli.sh" &&
+    [ "$("$tmp/home/.local/bin/obsidian")" = "fake-obsidian-cli" ]
+  rc=$?
+  rm -rf "$tmp"
+  return $rc
+}
+
+obsidian_cli_skips_when_absent() {
+  tmp="$(mktemp -d)"
+  HOME="$tmp" OBSIDIAN_APP="$tmp/Nope.app" "$DOTFILES_DIR/lib/install-obsidian-cli.sh" &&
+    [ ! -e "$tmp/.local/bin/obsidian" ]
+  rc=$?
+  rm -rf "$tmp"
+  return $rc
+}
+
+check "Obsidian CLI gets linked as 'obsidian' when the app is present (twice, idempotent)" obsidian_cli_links
+check "Obsidian CLI step is a no-op when Obsidian isn't installed"                          obsidian_cli_skips_when_absent
+
 # ---- the shell-handoff behavior this whole repo is built around ----
 check "zsh loads cleanly via its bootstrap"           bash -c 'zsh -i -c "exit 0"'
 check "bash hands off to zsh interactively"           check_handoff default
